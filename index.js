@@ -2,10 +2,24 @@ const GameManager = require('./js/game_manager'),
     KeyboardInputManager = require('./js/keyboard_input_manager'),
     HTMLActuator = require('./js/html_actuator'),
     LocalStorageManager = require('./js/local_storage_manager'),
-    Bot = require('./js/bot')
+    SequenceBot = require('./js/sequence-bot'),
+    _ = require('underscore')
 
 
-const bot = new Bot()
+const keys = [
+    0,1,2,3
+]
+const keysLabel = [
+    'up',
+    'right',
+    'down',
+    'left'
+]
+const bot = new SequenceBot()
+const randomSequence = _.sample(keys, 5)
+bot.setSequence(randomSequence)
+console.log('Sequence: '+randomSequence.map(a => keysLabel[a]).join(', '))
+
 
 const inputManager = new KeyboardInputManager(bot)
 
@@ -35,7 +49,7 @@ function handleEnd (stuck) {
 
     game.restart()
     bot.play(game, history.length + 1)
-})
+}
 
 
 function drawStats(){
