@@ -30,12 +30,20 @@ bot.play(game, 1)
 
 bot.on('end', handleEnd)
 bot.on('stuck', handleEnd.bind(null, true))
+bot.on('moved', onBotMove)
+let iterations = 1
+
+function onBotMove(){
+    let highest = 0
+    game.grid.eachCell((x,y,cell) => {
+        if(cell && cell.value > highest){
+            highest = cell.value
+        }
+    })
+    process.stdout.write(`\r#${iterations}: score: `+ game.score + ' ['+ highest+']')
+}
 
 function handleEnd (stuck) {
-
-    if(stuck){
-        process.stdout.write(' - Stuck\n')
-    }
 
     let highest = 0
     game.grid.eachCell((x,y,cell) => {
@@ -43,6 +51,21 @@ function handleEnd (stuck) {
             highest = cell.value
         }
     })
+
+    iterations++
+
+    if(stuck){
+        process.stdout.write(' - Stuck\n')
+    }else{
+        if(game.over){
+            process.stdout.write(' - You lose\n')
+        }else if(game.won){
+            process.stdout.write(' - You win!\n')
+        }
+
+    }
+
+
     let entry = game.serialize()
     entry.highestTile = highest
     history.push(entry)

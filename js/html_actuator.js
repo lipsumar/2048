@@ -5,23 +5,7 @@ let iterations = 1
 const {table} = require('table')
 
 HTMLActuator.prototype.actuate = function (grid, metadata) {
-    let highest = 0
     //this.drawGrid(grid)
-    grid.eachCell((x,y,cell) => {
-        if(cell && cell.value > highest){
-            highest = cell.value
-        }
-    })
-    process.stdout.write(`\r#${iterations}: score: `+ metadata.score + ' ['+ highest+']')
-    if(metadata.terminated){
-        if(metadata.over){
-            process.stdout.write(' - You lose')
-        }else if(metadata.won){
-            process.stdout.write(' - You win!')
-        }
-        console.log('')
-        iterations++
-    }
 
 }
 

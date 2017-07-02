@@ -33,6 +33,7 @@ Bot.prototype.play = function(game){
 
     if(!this.game.over){
         this.move().then(() => {
+            this.emit('moved')
             return new Promise(resolve => {
                 setTimeout(resolve, 1)
             })
