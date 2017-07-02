@@ -1,27 +1,26 @@
 function HTMLActuator() {
-
-
     this.score = 0
 }
-
+let iterations = 1
 const {table} = require('table')
 
 HTMLActuator.prototype.actuate = function (grid, metadata) {
     let highest = 0
-    this.drawGrid(grid)
+    //this.drawGrid(grid)
     grid.eachCell((x,y,cell) => {
         if(cell && cell.value > highest){
             highest = cell.value
         }
     })
-    process.stdout.write('score: '+ metadata.score + ' ['+ highest+']                      \r')
+    process.stdout.write(`\r#${iterations}: score: `+ metadata.score + ' ['+ highest+']')
     if(metadata.terminated){
-        console.log('')
         if(metadata.over){
-            console.log('You lose')
+            process.stdout.write(' - You lose')
         }else if(metadata.won){
-            console.log('You win!')
+            process.stdout.write(' - You win!')
         }
+        console.log('')
+        iterations++
     }
 
 }
@@ -39,13 +38,13 @@ HTMLActuator.prototype.drawGrid = function(grid){
 
     }
 
-    //console.log(data)
-    //console.log(table(data))
+    console.log(data)
+    console.log(table(data))
 }
 
 
 HTMLActuator.prototype.addTile = function () {
-    
+
 }
 
 

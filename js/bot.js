@@ -8,9 +8,6 @@ const keys = [
     'left'
 ]
 
-
-
-
 function Bot(){
     EventEmitter.call(this)
 }
@@ -18,17 +15,18 @@ Object.assign(Bot.prototype, EventEmitter.prototype)
 Bot.prototype.constructor = Bot
 
 Bot.prototype.play = function(game){
-    if(game) this.game = game
+    if(game){
+        this.game = game
+    }
 
     if(!this.game.over){
         this.move().then(() => {
             return new Promise(resolve => {
-                setTimeout(resolve, 50)
+                setTimeout(resolve, 1)
             })
         }).then(this.play.bind(this))
     }else{
-        this.game.restart()
-        this.play()
+        this.emit('end')
     }
 }
 
