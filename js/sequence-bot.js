@@ -1,9 +1,10 @@
 const Bot = require('./bot')
+const util = require('util')
 
 function SequenceBot(){
     Bot.call(this, arguments)
 }
-Object.assign(SequenceBot.prototype, Bot.prototype)
+util.inherits(SequenceBot, Bot)
 
 SequenceBot.prototype.setSequence = function(seq){
     this.sequence = seq
