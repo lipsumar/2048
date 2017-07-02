@@ -13,7 +13,16 @@ const game = new GameManager(4, inputManager, HTMLActuator, LocalStorageManager)
 const history = []
 bot.play(game, 1)
 
-bot.on('end', () => {
+
+bot.on('end', handleEnd)
+bot.on('stuck', handleEnd.bind(null, true))
+
+function handleEnd (stuck) {
+
+    if(stuck){
+        process.stdout.write(' - Stuck\n')
+    }
+
     let highest = 0
     game.grid.eachCell((x,y,cell) => {
         if(cell && cell.value > highest){

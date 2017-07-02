@@ -10,6 +10,7 @@ const keys = [
 
 function Bot(){
     EventEmitter.call(this)
+    this.scoreStuck = 0
 }
 Object.assign(Bot.prototype, EventEmitter.prototype)
 Bot.prototype.constructor = Bot
@@ -17,6 +18,17 @@ Bot.prototype.constructor = Bot
 Bot.prototype.play = function(game){
     if(game){
         this.game = game
+        this.lastScore = game.score
+        this.scoreStuck = 0
+    }
+
+    if(this.lastScore === this.game.score){
+        this.scoreStuck++
+    }
+    this.lastScore = this.game.score
+    if(this.scoreStuck>100){
+        this.emit('stuck')
+        return
     }
 
     if(!this.game.over){
@@ -25,6 +37,9 @@ Bot.prototype.play = function(game){
                 setTimeout(resolve, 1)
             })
         }).then(this.play.bind(this))
+        .catch(err => {
+            console.log(err)
+        })
     }else{
         this.emit('end')
     }
