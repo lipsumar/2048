@@ -1,4 +1,5 @@
 const EventEmitter = require('events')
+const util = require('util')
 const _ = require('underscore')
 
 const keys = [
@@ -12,8 +13,7 @@ function Bot(){
     EventEmitter.call(this)
     this.scoreStuck = 0
 }
-Object.assign(Bot.prototype, EventEmitter.prototype)
-Bot.prototype.constructor = Bot
+util.inherits(Bot, EventEmitter)
 
 Bot.prototype.play = function(game){
     if(game){
