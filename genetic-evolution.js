@@ -2,8 +2,14 @@ const Population = require('./js/genetic/Population'),
     EvolutionManager = require('./js/genetic/EvolutionManager'),
     Bot = require('./js/sequence-bot'),
     BotGame = require('./js/BotGame'),
-    _ = require('underscore')
-
+    _ = require('underscore'),
+    Cloudant = require('cloudant'),
+    cloudant = Cloudant({
+        account: 'lipsumar',
+        password: process.env.CLOUDANT_PW
+    }),
+    storage = cloudant.db.use('genetic_2048'),
+    pad = require('pad-left')
 
 
 const keys = [0,1,2,3]
@@ -18,9 +24,10 @@ const population = new Population({
             () => seq.push(_.sample(keys))
         )
         bot.setSequence(seq)
-        bot._dna = {
-            crossoverAmount: _.random(1, seq.length/2)
+        const dna = {
+            sequence: seq
         }
+        return {subject:bot, dna}
     },
     run: bot => {
         const game = new BotGame(bot, 80)
@@ -37,19 +44,13 @@ const population = new Population({
         const avg = sum / scores.length
         return avg
     },
+    maxFitness: 20000,
     reproduce: pool => {
         const parentA = _.sample(pool),
             parentB = _.sample(pool),
             // half A + half B
             childSequence = parentA.sequence.slice(0, Math.floor(parentA.sequence.length/2))
                 .concat(parentB.sequence.slice(Math.floor(parentB.sequence.length/2)))
-
-        //    childSequence = []
-
-        /*const swapIndexes = _.sample(, parentA._dna.crossoverAmount)
-        for(let i=0,j=Math.max(parentA.sequence.length, parentB.sequence.length); i<j; i++){
-            childSequence.push()
-        }*/
 
         if(Math.random() <= 0.01){
             // mutation !
@@ -67,15 +68,42 @@ const population = new Population({
 
         const childBot = new Bot()
         childBot.setSequence(childSequence)
-        return childBot
+        const dna = {sequence: childSequence}
+        return {
+            subject: childBot,
+            dna: dna
+        }
     }
 })
 population.fillRandom()
 
 const evolutionManager = new EvolutionManager({
     population,
-    generations: 1000
+    generations: Number.POSITIVE_INFINITY
 })
+
+evolutionManager.on('generation:end', generation => {
+    console.log('=> end of generation '+generation.count)
+
+    storage.insert({
+        fitness: generation.fitness,
+        fitnessAvg: generation.fitnessAvg,
+        count: generation.count,
+        dna: generation.dna.map(dna => {
+            return {sequence: dna.sequence.join('')}
+        })
+    }, 'generation-'+pad(generation.count, 5, '0'), (err, body) => {
+        if(err){
+            console.log(err)
+            return
+        }
+
+        if(!body.ok){
+            console.log('Error while storing generation')
+        }
+    })
+})
+
 evolutionManager.run().then(()=>{
     console.log('all done')
 })

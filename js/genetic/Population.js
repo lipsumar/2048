@@ -7,25 +7,25 @@ function Population(opts){
     this.Subject = opts.subject
     this.initializeSubject = opts.initializeSubject
     this.subjects = []
+    this.dnas = []
     this.runFunction = opts.run
     this.fitnessFunc = opts.rawFitness
     this.reproduceFunc = opts.reproduce
+    this.maxFitness = opts.maxFitness
 }
 
 Population.prototype.fillRandom = function(){
+    let created
     for(let i=0; i<this.size; i++){
-        this.subjects.push(
-            this.createSubject()
-        )
+        created = this.createSubject()
+        this.subjects.push(created.subject)
+        this.dnas.push(created.dna)
     }
 }
 
 Population.prototype.createSubject = function(){
     const subject = new this.Subject()
-    if(typeof this.initializeSubject === 'function'){
-        this.initializeSubject.call(null, subject)
-    }
-    return subject
+    return this.initializeSubject.call(null, subject)
 }
 
 Population.prototype.run = function(){
@@ -38,20 +38,20 @@ Population.prototype.runSubject = function(subject){
     return this.runFunction(subject)
 }
 
-Population.prototype.calculateFitness = function(){
-    let maxFitness = this.subjects.map(this.fitnessFunc)
-        .sort((a, b) => a - b)
-        .reverse()[0]
+Population.prototype.calculateFitness = function(maxFitness){
 
-    return this.subjects.map(this.calculateNormalizedFitness.bind(this, maxFitness))
+    return this.subjects.map(subject => this.calculateNormalizedFitness(subject, maxFitness))
 }
 
-Population.prototype.calculateNormalizedFitness = function(maxFitness, subject){
+Population.prototype.calculateNormalizedFitness = function(subject, maxFitness){
     return mapRange(x => Math.pow(x, 2), 0, maxFitness, 0, 1)(this.fitnessFunc(subject))
 }
 
 Population.prototype.makeMatingPool = function(){
-    const fitness = this.calculateFitness()
+    let maxFitness = this.subjects.map(this.fitnessFunc)
+        .sort((a, b) => a - b)
+        .reverse()[0]
+    const fitness = this.calculateFitness(maxFitness)
     const pool = []
 
     fitness.forEach((fit, i) => {
@@ -65,23 +65,23 @@ Population.prototype.makeMatingPool = function(){
 }
 
 Population.prototype.reproduce = function(){
-    //@todo implement a lighter way 
+    //@todo implement a lighter way
     const pool = this.makeMatingPool()
     const newPopulation = new Population(this.opts)
+    let child
     for(let i=0; i<this.size; i++){
-        newPopulation.add(
-            this.reproduceFunc(pool)
-        )
+        child = this.reproduceFunc(pool)
+        newPopulation.add(child.subject, child.dna)
     }
     return newPopulation
 }
 
-Population.prototype.add = function(subject){
+Population.prototype.add = function(subject, dna){
     if(this.subjects.length === this.size){
         throw new Error('tried to add to a full population')
     }
     this.subjects.push(subject)
-
+    this.dnas.push(dna)
 }
 
 module.exports = Population

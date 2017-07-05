@@ -1,10 +1,13 @@
-
+const EventEmitter = require('events')
+const util = require('util')
 
 function EvolutionManager(opts){
+    EventEmitter.call(this)
     this.population = opts.population
     this.maxGenerations = opts.generations
     this.generationCount = 1
 }
+util.inherits(EvolutionManager, EventEmitter)
 
 EvolutionManager.prototype.run = function(){
     console.log('######### Generation '+this.generationCount)
@@ -14,6 +17,7 @@ EvolutionManager.prototype.run = function(){
             this.runResolver = resolve
         }
         this.population.run()
+            .then(this.onGenerationEnd.bind(this))
             .then(() => {
                 this.generationCount++
                 if(this.generationCount <= this.maxGenerations){
@@ -27,6 +31,17 @@ EvolutionManager.prototype.run = function(){
     })
 }
 
+EvolutionManager.prototype.onGenerationEnd = function(){
+    const fitness = this.population.calculateFitness(this.population.maxFitness)
+    let total = fitness.reduce((total, f) => total + f, 0)
+    this.emit('generation:end', {
+        fitness,
+        fitnessAvg: total / fitness.length,
+        count: this.generationCount,
+        dna: this.population.dnas
+    })
+    return true
+}
 
 
 EvolutionManager.prototype.createNextGeneration = function(){
