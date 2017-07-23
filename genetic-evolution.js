@@ -55,9 +55,7 @@ evolutionManager.on('generation:end', generation => {
         fitness: generation.fitness,
         fitnessAvg: generation.fitnessAvg,
         count: generation.count,
-        dna: generation.dna.map(dna => {
-            return {sequence: dna.sequence.join('')}
-        }),
+        dna: generation.dna,
         dnaLengthAvg
     }, 'generation-'+pad(generation.count, 5, '0'), (err, body) => {
         if(err){
