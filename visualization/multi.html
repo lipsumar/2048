@@ -1,4 +1,9 @@
 <!DOCTYPE html>
+<style media="screen">
+    label{
+        font-size:4em;
+    }
+</style>
 <div class="graph-fitness"></div>
 <div class="graph-seq-length"></div>
 <script src="https://cdn.jsdelivr.net/bluebird/latest/bluebird.min.js"></script>
@@ -49,6 +54,10 @@ function makeMinMaxGraph(name, source, container){
                 generation: i
             }
         })
+
+        var lastEl = document.createElement('label')
+        lastEl.innerHTML = data[data.length-1].avg.toFixed(4)
+        document.querySelector(container).append(lastEl)
 
         drawMinMaxGraph(data, x, y, [lineMin, lineAvg, lineMax], g,width, height);
     })
