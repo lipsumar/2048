@@ -93,13 +93,17 @@ const evolutionManager = new EvolutionManager({
 evolutionManager.on('generation:end', generation => {
     console.log('=> end of generation '+generation.count)
 
+    const allDnaSeqLength = generation.dna.reduce((memo, dna) => memo + dna.sequence.length, 0)
+    const dnaLengthAvg = allDnaSeqLength / generation.dna.length
+
     storage.insert({
         fitness: generation.fitness,
         fitnessAvg: generation.fitnessAvg,
         count: generation.count,
         dna: generation.dna.map(dna => {
             return {sequence: dna.sequence.join('')}
-        })
+        }),
+        dnaLengthAvg
     }, 'generation-'+pad(generation.count, 5, '0'), (err, body) => {
         if(err){
             console.log(err)

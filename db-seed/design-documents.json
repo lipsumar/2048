@@ -6,4 +6,11 @@
     }
   },
   "language": "javascript"
+},{
+  "_id": "_design/seq-length",
+  "views": {
+    "avg": {
+      "map": "function (doc) {emit(doc._id, doc.dnaLengthAvg);}"
+    }
+  }
 }]
