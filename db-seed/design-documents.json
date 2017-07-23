@@ -1,0 +1,9 @@
+[{
+  "_id": "_design/fitness",
+  "views": {
+    "avg": {
+      "map": "function (doc) {\n  emit(doc._id, doc.fitnessAvg);\n}"
+    }
+  },
+  "language": "javascript"
+}]

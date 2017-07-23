@@ -1,3 +1,10 @@
+const argv = require('minimist')(process.argv.slice(2))
+
+if(!argv.name){
+    console.log('--name required (db name, must not exist yet)')
+    process.exit()
+}
+
 const Population = require('./js/genetic/Population'),
     EvolutionManager = require('./js/genetic/EvolutionManager'),
     Bot = require('./js/sequence-bot'),
@@ -8,14 +15,15 @@ const Population = require('./js/genetic/Population'),
         account: 'lipsumar',
         password: process.env.CLOUDANT_PW
     }),
-    storage = cloudant.db.use('genetic_2048'),
+    storage = cloudant.db.use(argv.name),
+    createDatabase = require('./js/create-database'),
     pad = require('pad-left')
 
 
 const keys = [0,1,2,3]
 
 const population = new Population({
-    size: 100,
+    size: 10,
     subject: Bot,
     initializeSubject: bot => {
         const seq = []
@@ -30,7 +38,7 @@ const population = new Population({
         return {subject:bot, dna}
     },
     run: bot => {
-        const game = new BotGame(bot, 80)
+        const game = new BotGame(bot, 8)
         return game.run().then(meta => {
             bot.result = meta
             console.log(`Done running ${meta.history.length} games: ${bot.sequence} 🏆 ${meta.stats.bestScore} [${meta.stats.bestTile}]`)
@@ -104,6 +112,23 @@ evolutionManager.on('generation:end', generation => {
     })
 })
 
-evolutionManager.run().then(()=>{
-    console.log('all done')
+process.stdout.write('Creating database.')
+cloudant.db.list((err, dbs) => {
+    if(err) throw err
+
+    process.stdout.write('.')
+
+    if(dbs.includes(argv.name)){
+        console.log(` error\nDB "${argv.name}" already exists, can't continue.`)
+        process.exit()
+    }
+
+    createDatabase(cloudant, argv.name, require('./db-seed/design-documents.json'))
+        .then(() => {
+            process.stdout.write('. done\n')
+            evolutionManager.run().then(()=>{
+                console.log('all done')
+            })
+        })
+        .catch(err => console.log(err))
 })
