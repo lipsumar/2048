@@ -1,8 +1,70 @@
 <!DOCTYPE html>
 <div class="graph-fitness"></div>
 <div class="graph-seq-length"></div>
+<script src="https://cdn.jsdelivr.net/bluebird/latest/bluebird.min.js"></script>
 <script src="https://d3js.org/d3.v4.min.js"></script>
 <script>
+
+
+function makeMinMaxGraph(name, source, container){
+    var titleEl = document.createElement('h3')
+    titleEl.innerHTML=name
+    document.querySelector(container).append(titleEl)
+    var svg = d3.select(container).append("svg").attr("width", 900).attr("height", 200),
+        margin = {top: 20, right: 20, bottom: 30, left: 50},
+        width = +svg.attr("width") - margin.left - margin.right,
+        height = +svg.attr("height") - margin.top - margin.bottom,
+        g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    var x = d3.scaleLinear()
+        .rangeRound([0, width]);
+
+    var y = d3.scaleLinear()
+        .rangeRound([height, 0]);
+
+    var lineMin = d3.line()
+        .x(function(d) { return x(d.generation); })
+        .y(function(d) { return y(d.min); });
+    var lineAvg = d3.line()
+        .x(function(d) { return x(d.generation); })
+        .y(function(d) { return y(d.avg); });
+    var lineMax = d3.line()
+        .x(function(d) { return x(d.generation); })
+        .y(function(d) { return y(d.max); });
+
+
+
+    Promise.all([
+        fetchJson('https://lipsumar.cloudant.com/'+source+'/min'),
+        fetchJson('https://lipsumar.cloudant.com/'+source+'/avg'),
+        fetchJson('https://lipsumar.cloudant.com/'+source+'/max'),
+    ]).then(function(res){
+        [min, avg, max] = res;
+
+        var data = min.rows.map((r,i) => {
+            return {
+                min: min.rows[i].value,
+                avg: avg.rows[i].value,
+                max: max.rows[i].value,
+                generation: i
+            }
+        })
+
+        drawMinMaxGraph(data, x, y, [lineMin, lineAvg, lineMax], g,width, height);
+    })
+
+
+}
+
+function fetchJson(url){
+    return fetch(url, {
+        method: 'get'
+    }).then(function(response) {
+        return response.json();
+    }).catch(function(err) {
+        console.log(err);
+    });
+}
 
 function makeGraph(name, source, container){
     var titleEl = document.createElement('h3')
@@ -25,43 +87,74 @@ function makeGraph(name, source, container){
         .y(function(d) { return y(d.fitness); });
 
 
-        fetch('https://lipsumar.cloudant.com/'+source, {
-        	method: 'get'
-        }).then(function(response) {
-        	return response.json();
-        }).then(function(d) {
+    fetchJson('https://lipsumar.cloudant.com/'+source)
+        .then(function(d){
             var data = d.rows.map((r,i) => {
                 return {
                     fitness: r.value,
                     generation: i
                 }
             })
-            drawGraph(data);
-        }).catch(function(err) {
-            console.log(err)
-        });
+            drawGraph(data, x, y, line, g,width, height);
+        })
 
-    function drawGraph(data) {
 
-      x.domain(d3.extent(data, function(d) { return d.generation; }));
-      y.domain(d3.extent(data, function(d) { return d.fitness; }));
+}
 
-      g.append("g")
-          .attr("transform", "translate(0," + height + ")")
-          .call(d3.axisBottom(x))
-        .select(".domain")
-          .remove();
 
-      g.append("g")
-          .call(d3.axisLeft(y))
-        .append("text")
-          .attr("fill", "#000")
-          .attr("transform", "rotate(-90)")
-          .attr("y", 6)
-          .attr("dy", "0.71em")
-          .attr("text-anchor", "end")
-          .text("Fitness");
+function drawGraph(data, x, y, line, g, width, height) {
 
+  x.domain(d3.extent(data, function(d) { return d.generation; }));
+  y.domain(d3.extent(data, function(d) { return d.fitness; }));
+
+  g.append("g")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(x))
+    .select(".domain")
+      .remove();
+
+  g.append("g")
+      .call(d3.axisLeft(y))
+    .append("text")
+      .attr("fill", "#000")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", "0.71em")
+      .attr("text-anchor", "end")
+      .text("Fitness");
+
+  g.append("path")
+      .datum(data)
+      .attr("fill", "none")
+      .attr("stroke", "steelblue")
+      .attr("stroke-linejoin", "round")
+      .attr("stroke-linecap", "round")
+      .attr("stroke-width", 1.5)
+      .attr("d", line);
+}
+
+function drawMinMaxGraph(data, x, y, lines, g, width, height) {
+
+  x.domain(d3.extent(data, function(d) { return d.generation; }));
+  y.domain(d3.extent(data, function(d,i) { return i===0?d.min:d.max; }));
+
+  g.append("g")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(x))
+    .select(".domain")
+      .remove();
+
+  g.append("g")
+      .call(d3.axisLeft(y))
+    .append("text")
+      .attr("fill", "#000")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", "0.71em")
+      .attr("text-anchor", "end")
+      .text("Fitness");
+
+  /*lines.forEach(function(line){
       g.append("path")
           .datum(data)
           .attr("fill", "none")
@@ -70,13 +163,67 @@ function makeGraph(name, source, container){
           .attr("stroke-linecap", "round")
           .attr("stroke-width", 1.5)
           .attr("d", line);
-    }
+  })*/
+
+
+
+  g.selectAll("dot")
+        .data(data)
+      .enter().append("line")
+        .attr("stroke", '#999')
+        .attr("x1", function(d) { return x(d.generation); })
+        .attr("y1", function(d) { return y(d.min); })
+        .attr("x2", function(d) { return x(d.generation); })
+        .attr("y2", function(d) { return y(d.avg); });
+  g.selectAll("dot")
+        .data(data)
+      .enter().append("line")
+        .attr("stroke", '#000')
+        .attr("stroke-width", '2')
+        .attr("x1", function(d) { return x(d.generation)-3; })
+        .attr("y1", function(d) { return y(d.min); })
+        .attr("x2", function(d) { return x(d.generation)+3; })
+        .attr("y2", function(d) { return y(d.min); });
+
+
+
+    g.selectAll("dot")
+          .data(data)
+        .enter().append("line")
+          .attr("stroke", '#999')
+          .attr("x1", function(d) { return x(d.generation); })
+          .attr("y1", function(d) { return y(d.max); })
+          .attr("x2", function(d) { return x(d.generation); })
+          .attr("y2", function(d) { return y(d.avg); });
+  g.selectAll("dot")
+        .data(data)
+      .enter().append("line")
+        .attr("stroke", '#000')
+        .attr("stroke-width", '2')
+        .attr("x1", function(d) { return x(d.generation)-3; })
+        .attr("y1", function(d) { return y(d.max); })
+        .attr("x2", function(d) { return x(d.generation)+3; })
+        .attr("y2", function(d) { return y(d.max); });
+
+
+    // draw avg
+    g.append("path")
+        .datum(data)
+        .attr("fill", "none")
+        .attr("stroke", "steelblue")
+        .attr("stroke-linejoin", "round")
+        .attr("stroke-linecap", "round")
+        .attr("stroke-width", 1.5)
+        .attr("d", lines[1]);
+
+
+
 }
 
 (function(){
     var db = location.hash.substr(1);
-    makeGraph('Fitness' ,db+'/_design/fitness/_view/avg', '.graph-fitness')
-    makeGraph('Sequence length' ,db+'/_design/seq-length/_view/avg', '.graph-seq-length')
+    makeMinMaxGraph('Fitness' ,db+'/_design/fitness/_view', '.graph-fitness')
+    makeMinMaxGraph('Sequence length' ,db+'/_design/seq-length/_view', '.graph-seq-length')
 }())
 
 

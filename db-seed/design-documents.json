@@ -3,6 +3,12 @@
   "views": {
     "avg": {
       "map": "function (doc) {\n  emit(doc._id, doc.fitnessAvg);\n}"
+    },
+    "min": {
+       "map": "function (doc) { minFit = 99999999999;doc.fitness.forEach(function(f){minFit = f < minFit ? f : minFit;});emit(doc._id, minFit);}"
+    },
+    "max": {
+       "map": "function (doc) { maxFit = 0;doc.fitness.forEach(function(f){maxFit = f > maxFit ? f : maxFit;});emit(doc._id, maxFit);}"
     }
   },
   "language": "javascript"
@@ -11,6 +17,12 @@
   "views": {
     "avg": {
       "map": "function (doc) {emit(doc._id, doc.dnaLengthAvg);}"
+    },
+    "min": {
+       "map": "function (doc) { minLen = 99999999999;doc.dna.forEach(function(d){minLen = d.sequence.length < minLen ? d.sequence.length : minLen;});emit(doc._id, minLen);}"
+    },
+    "max": {
+       "map": "function (doc) { maxLen = 0;doc.dna.forEach(function(d){maxLen = d.sequence.length > maxLen ? d.sequence.length : maxLen;});emit(doc._id, maxLen);}"    
     }
   }
 }]
