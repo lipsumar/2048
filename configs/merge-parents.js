@@ -27,10 +27,11 @@ module.exports = function(Bot){
         reproduce: pool => {
             const parentA = _.sample(pool),
                 parentB = _.sample(pool),
-                froms = [parentA, parentB]
+                froms = [parentA, parentB],
+                longestParent = parentA.sequence.length > parentB.sequence.length ? parentA : parentB
 
             const childSequence = []
-            parentA.sequence.forEach((key, i) => {
+            longestParent.sequence.forEach((key, i) => {
                 const from = _.random(0,1),
                     fromInv = from === 0 ? 1 : 0
                 let toAdd
