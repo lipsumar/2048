@@ -1,6 +1,6 @@
 # 2048 Genetic
 
-> Make bots play 2048 until they figure the best fixed sequence of keys to win
+> Make bots play 2048 until they figure out the best fixed sequence of keys to win
 
 ## Install
 
@@ -11,8 +11,15 @@
 ## Usage
 
 ```bash
-node genetic-evolution.js --name <database_name>
+node genetic-evolution.js --name <database_name> --config <config> [--popsize <population-size>] [--games <number-of-games>]
 ```
+
+**Options**:
+* `name`: the cloudant database name. Will be created automatically, must not exist;
+* `config`: config name. Should be the name of a js file in `configs/`
+* `popsize`: population size (optional, default 10)
+* `games`: number of games to play for each bot (optional, default 10)
+
 
 A [cloudant](https://cloudant.com) database will be created.
 
