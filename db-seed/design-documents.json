@@ -1,0 +1,16 @@
+[{
+  "_id": "_design/fitness",
+  "views": {
+    "avg": {
+      "map": "function (doc) {\n  emit(doc._id, doc.fitnessAvg);\n}"
+    }
+  },
+  "language": "javascript"
+},{
+  "_id": "_design/seq-length",
+  "views": {
+    "avg": {
+      "map": "function (doc) {emit(doc._id, doc.dnaLengthAvg);}"
+    }
+  }
+}]
