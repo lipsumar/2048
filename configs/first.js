@@ -31,12 +31,12 @@ module.exports = function(Bot){
                 childSequence = parentA.sequence.slice(0, Math.floor(parentA.sequence.length/2))
                     .concat(parentB.sequence.slice(Math.floor(parentB.sequence.length/2)))
 
-            if(Math.random() <= 0.01){
+            if(Math.random() <= 0.05){
                 // mutation !
                 childSequence[_.random(0, childSequence.length)] = _.sample(keys)
             }
 
-            if(Math.random() <= 0.015){
+            if(Math.random() <= 0.05){
                 // mutation !
                 if(Math.random() > 0.5){
                     childSequence.push(_.sample(keys))
