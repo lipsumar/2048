@@ -21,7 +21,7 @@ module.exports = function(Bot){
                 .sort()
 
             const med = scores[Math.floor(scores.length/2)]
-            if(scores[0]<700) return 10
+            if(scores[Math.floor(scores.length/3)]<700) return 10
             return med
         },
         maxFitness: 10000,
